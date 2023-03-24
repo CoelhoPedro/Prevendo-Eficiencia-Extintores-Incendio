@@ -68,5 +68,60 @@ modelo_knn_v1 = knn(train = treino,
                     test = teste,
                     cl = treino_labels,
                     k = 7)
-summary(modelo_knn_v1)
+
 CrossTable(x = teste_labels, y = modelo_knn_v1, prop.chisq = FALSE)
+confusionMatrix(modelo_knn_v1, reference = teste_labels)
+
+# Precisão de 92%
+
+# Vamos tentar criar outros modelos com o valor de k diferente
+
+modelo_knn_v2 = knn(train = treino,
+                    test = teste,
+                    cl = treino_labels,
+                    k = 5)
+
+CrossTable(x = teste_labels, y = modelo_knn_v2, prop.chisq = FALSE)
+confusionMatrix(modelo_knn_v2, reference = teste_labels)
+
+# Conseguimos um modelo melhor, com 93% de acurácia
+
+modelo_knn_v3 = knn(train = treino,
+                    test = teste,
+                    cl = treino_labels,
+                    k = 10)
+
+CrossTable(x = teste_labels, y = modelo_knn_v3, prop.chisq = FALSE)
+confusionMatrix(modelo_knn_v3, reference = teste_labels)
+
+# Acurácia de 91%. O melhor modelo que conseguimos com o algoritmo knn
+# foi a versão 2, com 93% de acurácia
+
+# Vamos criar modelos com outros algoritmos.
+# Vamos tentar o Support Vector Machine (SVM)
+
+modelo_svm_v1 <- svm(STATUS ~ ., 
+                     data = treino, 
+                     type = 'C-classification', 
+                     kernel = 'radial')
+
+previsao_svm_v1 = predict(modelo_svm_v1, teste)
+
+table(previsao_svm_v1, teste$STATUS)
+mean(previsao_svm_v1 == teste$STATUS)
+
+# Conseguimos uma acurácia de 94% com o algoritmo SVM
+
+# Vamos tentar também o algoritmo random forest
+
+modelo_rf_v1 = randomForest(STATUS ~ .,
+                            data = treino,
+                            ntree = 100,
+                            nodesize = 10)
+
+previsao_rf_v1 = predict(modelo_rf_v1, teste)
+
+table(previsao_rf_v1, teste$STATUS)
+mean(previsao_rf_v1 == teste$STATUS)
+
+# Conseguimos a melhor acurácia com o random forest, de 96%
