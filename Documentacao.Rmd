@@ -1,3 +1,27 @@
+---
+title: "Documentação e Análise dos Resultados"
+output: html_document
+---
+
+# Introdução
+
+Esta é a documentação oficial do projeto, com as linhas de código explicadas e comentadas, e os resultados que obtivemos com as previsões.
+
+O objetivo deste projeto é realizar a previsão da eficiência de extintores elétricos usando Machine Learning em linguagem R.
+
+Este projeto faz parte da Formação Cientista de Dados da Data Science Academy.
+
+## Fontes de dados:
+
+https://www.muratkoklu.com/datasets/vtdhnd07.php
+
+Os detalhes do dataset estão disponíveis no README.
+
+# Código explicado e comentado
+
+Importando os pacotes necessários e lendo os dados do arquivo.
+
+```{r, eval=TRUE, message=FALSE, warning=FALSE}
 library(readxl)
 library(ggplot2)
 library(randomForest)
@@ -7,23 +31,40 @@ library(class)
 library(gmodels)
 
 dados = read_xlsx("Acoustic_Extinguisher_Fire_Dataset.xlsx", sheet = "A_E_Fire_Dataset")
+```
+
+Transformando os dados para a classe data.frame
+
+```{r}
 dados = as.data.frame(dados)
+```
 
+Checando valores missing
+
+```{r}
 dim(dados)
-
-# Checando valores missing
 sum(is.na(dados$STATUS))
+```
 
-# Checando os tipos de dados
+Não temos valores missing, então não precisamos nos preocupar com isso.
+
+Checando os tipos de dados
+
+```{r}
 str(dados)
+```
 
-# Transformando os tipos de dados
+Transformando os tipos de dados
+
+```{r}
 dados$SIZE = as.factor(dados$SIZE)
 dados$FUEL = as.numeric(as.factor(dados$FUEL))
 dados$STATUS = as.factor(dados$STATUS)
+```
 
-# Checando a fequência dos dados, para verificar se precisaremos usar
-# alguma técnica para balancear os dados
+Checando a fequência dos dados, para verificar se precisaremos usar alguma técnica para balancear os dados
+
+```{r}
 summary(dados)
 table(dados$DISTANCE)
 table(dados$DESIBEL)
@@ -31,33 +72,45 @@ table(dados$AIRFLOW)
 table(dados$FREQUENCY)
 table(dados$STATUS)
 table(dados$FUEL)
+```
 
-# Parece que as variáveis estão bem balanceadas
+Parece que as variáveis estão bem balanceadas
 
-# Criando boxplot para as variáveis numéricas
+Vamos vizualizar as variáveis numéricas com boxplot
+
+```{r}
 col_names = names(dados)
 lapply(col_names, function(x){
   if(!is.factor(dados[,x])) {
     ggplot(dados, aes_string(x)) +
       geom_boxplot() +
       ggtitle(paste("Boxplot de", x))}})
+```
 
-# Criando gráfico de barras para as variáveis do tipo fator
+Criando gráfico de barras para as variáveis do tipo fator
+
+```{r}
 lapply(col_names, function(x){
   if(is.factor(dados[,x])) {
     ggplot(dados, aes_string(x)) +
       geom_bar() +
       ggtitle(paste("Frequência da variável",x))}})
+```
 
-# Criando os dados de treino e de teste com o pacote caret
+Criando os dados de treino e de teste com o pacote caret
+
+```{r}
 index = createDataPartition(dados$STATUS, p = .70, list = FALSE)
 treino = dados[index, ]
 teste = dados[-index, ]
 
 dim(treino)
 dim(teste)
+```
 
-# Criando o primeiro modelo com o knn
+Criando o primeiro modelo com o knn
+
+```{r}
 treino_labels = dados[index, 7]
 teste_labels = dados[-index, 7]
 
@@ -69,11 +122,13 @@ modelo_knn_v1 = knn(train = treino,
 
 CrossTable(x = teste_labels, y = modelo_knn_v1, prop.chisq = FALSE)
 confusionMatrix(modelo_knn_v1, reference = teste_labels)
+```
 
-# Precisão de 92%
+Precisão de 93%.
 
-# Vamos tentar criar outros modelos com o valor de k diferente
+Vamos tentar criar outros modelos com o valor de k diferente.
 
+```{r}
 modelo_knn_v2 = knn(train = treino,
                     test = teste,
                     cl = treino_labels,
@@ -81,9 +136,11 @@ modelo_knn_v2 = knn(train = treino,
 
 CrossTable(x = teste_labels, y = modelo_knn_v2, prop.chisq = FALSE)
 confusionMatrix(modelo_knn_v2, reference = teste_labels)
+```
 
-# Conseguimos um modelo melhor, com 93% de acurácia
+A segunda versão do modelo possui a mesma acurácia do primeiro, 93%.
 
+```{r}
 modelo_knn_v3 = knn(train = treino,
                     test = teste,
                     cl = treino_labels,
@@ -91,13 +148,13 @@ modelo_knn_v3 = knn(train = treino,
 
 CrossTable(x = teste_labels, y = modelo_knn_v3, prop.chisq = FALSE)
 confusionMatrix(modelo_knn_v3, reference = teste_labels)
+```
 
-# Acurácia de 91%. O melhor modelo que conseguimos com o algoritmo knn
-# foi a versão 2, com 93% de acurácia
+Acurácia de 92%.
 
-# Vamos criar modelos com outros algoritmos.
-# Vamos tentar o Support Vector Machine (SVM)
+Vamos criar modelos com outros algoritmos. Primeiro vamos tentar o Support Vector Machine (SVM)
 
+```{r}
 modelo_svm_v1 <- svm(STATUS ~ ., 
                      data = treino, 
                      type = 'C-classification', 
@@ -107,11 +164,13 @@ previsao_svm_v1 = predict(modelo_svm_v1, teste)
 
 table(previsao_svm_v1, teste$STATUS)
 mean(previsao_svm_v1 == teste$STATUS)
+```
 
-# Conseguimos uma acurácia de 94% com o algoritmo SVM
+Conseguimos uma acurácia de 94% com o algoritmo SVM
 
-# Vamos tentar também o algoritmo random forest
+Vamos tentar também o algoritmo Random Forest.
 
+```{r}
 modelo_rf_v1 = randomForest(STATUS ~ .,
                             data = treino,
                             ntree = 100,
@@ -121,5 +180,6 @@ previsao_rf_v1 = predict(modelo_rf_v1, teste)
 
 table(previsao_rf_v1, teste$STATUS)
 mean(previsao_rf_v1 == teste$STATUS)
+```
 
-# Conseguimos a melhor acurácia com o random forest, de 96%
+Conseguimos a melhor acurácia com o random forest, de 96%.
