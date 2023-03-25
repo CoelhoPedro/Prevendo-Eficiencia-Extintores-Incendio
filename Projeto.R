@@ -9,6 +9,8 @@ library(gmodels)
 dados = read_xlsx("Acoustic_Extinguisher_Fire_Dataset.xlsx", sheet = "A_E_Fire_Dataset")
 dados = as.data.frame(dados)
 
+set.seed(105)
+
 dim(dados)
 
 # Checando valores missing
@@ -33,6 +35,10 @@ table(dados$STATUS)
 table(dados$FUEL)
 
 # Parece que as variáveis estão bem balanceadas
+
+# Vamos fazer uma análise das variáveis
+
+
 
 # Criando boxplot para as variáveis numéricas
 col_names = names(dados)
@@ -61,7 +67,6 @@ dim(teste)
 treino_labels = dados[index, 7]
 teste_labels = dados[-index, 7]
 
-set.seed(105)
 modelo_knn_v1 = knn(train = treino,
                     test = teste,
                     cl = treino_labels,
@@ -70,7 +75,7 @@ modelo_knn_v1 = knn(train = treino,
 CrossTable(x = teste_labels, y = modelo_knn_v1, prop.chisq = FALSE)
 confusionMatrix(modelo_knn_v1, reference = teste_labels)
 
-# Precisão de 92%
+# Precisão de 93%
 
 # Vamos tentar criar outros modelos com o valor de k diferente
 
@@ -82,7 +87,7 @@ modelo_knn_v2 = knn(train = treino,
 CrossTable(x = teste_labels, y = modelo_knn_v2, prop.chisq = FALSE)
 confusionMatrix(modelo_knn_v2, reference = teste_labels)
 
-# Conseguimos um modelo melhor, com 93% de acurácia
+# A segunda versão do modelo possui a mesma acurácia do primeiro, 93%.
 
 modelo_knn_v3 = knn(train = treino,
                     test = teste,
@@ -92,8 +97,7 @@ modelo_knn_v3 = knn(train = treino,
 CrossTable(x = teste_labels, y = modelo_knn_v3, prop.chisq = FALSE)
 confusionMatrix(modelo_knn_v3, reference = teste_labels)
 
-# Acurácia de 91%. O melhor modelo que conseguimos com o algoritmo knn
-# foi a versão 2, com 93% de acurácia
+# Acurácia de 92%.
 
 # Vamos criar modelos com outros algoritmos.
 # Vamos tentar o Support Vector Machine (SVM)
@@ -122,4 +126,48 @@ previsao_rf_v1 = predict(modelo_rf_v1, teste)
 table(previsao_rf_v1, teste$STATUS)
 mean(previsao_rf_v1 == teste$STATUS)
 
-# Conseguimos a melhor acurácia com o random forest, de 96%
+# Conseguimos a melhor acurácia com o random forest, de 95%
+
+# Vamos tentar mudar os hiperparâmetros do random forest pra ver se conseguimos
+# um resultado melhor
+
+modelo_rf_v2 = randomForest(STATUS ~ .,
+                            data = treino,
+                            ntree = 200,
+                            nodesize = 10)
+
+previsao_rf_v2 = predict(modelo_rf_v2, teste)
+
+table(previsao_rf_v2, teste$STATUS)
+mean(previsao_rf_v2 == teste$STATUS)
+
+# Acurácia de 95%, levemente inferior ao primeiro modelo.
+
+# Vamos tentar mais uma modificação
+
+modelo_rf_v3 = randomForest(STATUS ~ .,
+                            data = treino,
+                            ntree = 200,
+                            nodesize = 5)
+
+previsao_rf_v3 = predict(modelo_rf_v3, teste)
+
+table(previsao_rf_v3, teste$STATUS)
+mean(previsao_rf_v3 == teste$STATUS)
+
+# Acurácia de 95%, levemente superior.
+
+# Vamos tentar mais uma modificação.
+
+modelo_rf_v4 = randomForest(STATUS ~ .,
+                            data = treino,
+                            ntree = 200,
+                            nodesize = 1)
+
+previsao_rf_v4 = predict(modelo_rf_v4, teste)
+
+table(previsao_rf_v4, teste$STATUS)
+mean(previsao_rf_v4 == teste$STATUS)
+
+# Acurácia de 96%, conseguimos a melhor performance com essa versão do modelo
+# random forest

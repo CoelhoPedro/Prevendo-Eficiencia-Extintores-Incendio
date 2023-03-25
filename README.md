@@ -32,4 +32,4 @@ O objetivo deste projeto é construir um modelo de Machine Learning que seja cap
 
 A documentação do projeto está disponível no link:
 
-https://rpubs.com/CoelhoPedro/1019665
+http://rpubs.com/CoelhoPedro/1019852
